@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { authClient } from "@/lib/auth-client";
 
 export function RequestPasswordResetForm() {
@@ -80,6 +80,16 @@ export function ResetPasswordForm({ token }: { token: string }) {
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
   const [pending, setPending] = useState(false);
+
+  useEffect(() => {
+    if (token) {
+      window.history.replaceState(
+        window.history.state,
+        "",
+        window.location.pathname,
+      );
+    }
+  }, [token]);
 
   async function submit(formData: FormData) {
     const password = String(formData.get("password") ?? "");

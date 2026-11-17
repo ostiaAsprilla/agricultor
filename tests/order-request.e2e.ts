@@ -321,7 +321,25 @@ async function main(): Promise<void> {
       browser = await chromium.launch({ headless: true });
       const resetContext = await browser.newContext();
       const resetPage = await resetContext.newPage();
-      await resetPage.goto(resetUrl);
+      const localResetUrl = new URL(resetUrl);
+      if (!["localhost", "127.0.0.1"].includes(localResetUrl.hostname)) {
+        throw new Error("The reset email did not contain a local E2E link.");
+      }
+      localResetUrl.protocol = "http:";
+      try {
+        await resetPage.goto(localResetUrl.toString());
+        await resetPage.waitForFunction(
+          () =>
+            window.location.pathname === "/restablecer-contrasena" &&
+            window.location.search === "",
+          undefined,
+          { timeout: 5000 },
+        );
+      } catch {
+        throw new Error(
+          "The local reset link did not reach a token-free password form.",
+        );
+      }
       await resetPage.getByRole("heading", { name: "Cambia tu contraseña" }).waitFor();
       await resetPage.getByLabel("Nueva contraseña").fill(newPassword);
       await resetPage
